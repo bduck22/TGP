@@ -11337,6 +11337,7 @@ MonoBehaviour:
   stone: 1
   Isgig: 0
   gigtime: 0
+  season1: 0
   DashEffect: {fileID: 472605124}
   walling: 0
   BulletCount: {fileID: 1449114704}
@@ -20870,6 +20871,7 @@ MonoBehaviour:
   red: {r: 1, g: 0, b: 0.23529412, a: 0}
   renderer2DData: {fileID: 11400000, guid: 424799608f7334c24bf367e4bbfa7f9a, type: 2}
   featureName: Fullscreen Pass Renderer Feature
+  season1: 0
   Map: {fileID: 0}
   Restart: {fileID: 0}
   DeathEffect: {fileID: 3146496624814257356, guid: 8a145e3671a99624d8d62fe88c5b6633, type: 3}
