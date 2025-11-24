@@ -1,10 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
-using UnityEngine.SceneManagement;
 using UnityEngine.Rendering.Universal;
-using Unity.VisualScripting;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -29,15 +26,21 @@ public class GameManager : MonoBehaviour
         {
             if (f.name == featureName && f is FullScreenPassRendererFeature fsFeature)
             {
-                ScreenShader = fsFeature.passMaterial; // 여기서 Material 인스턴스 확보
+                ScreenShader = fsFeature.passMaterial;
                 break;
             }
         }
     }
+
+    public bool season1;
     void Start()
     {
-        //Cursor.visible = false;
-        ScreenShader.SetFloat("_Fliped", 0f);
+        if (!season1)
+        {
+            //Cursor.visible = false;
+            StartCoroutine(flip(0));
+        }
+        //ScreenShader.SetFloat("_Fliped", 1.5f);
     }
 
     public Transform Map;
@@ -47,6 +50,7 @@ public class GameManager : MonoBehaviour
     public GameObject DeathEffect;
     public GameObject StepEffect;
     public GameObject ParringEffect;
+    public GameObject ThumpEffect;
 
     public AudioSource source;
 
@@ -77,11 +81,16 @@ public class GameManager : MonoBehaviour
         {
             Application.Quit();
         }
+        if (Input.GetMouseButtonUp(0) || Input.GetKeyUp(KeyCode.Return) || Input.GetKeyUp(KeyCode.Space))
+        {
+            NextText();
+        }
     }
-    private IEnumerator flip(float time)
+
+    public IEnumerator flip(float time)
     {
         yield return new WaitForSeconds(time);
-        if(Time.timeScale==1)Time.timeScale = 0.75f;
+        if (Time.timeScale == 1) Time.timeScale = 0.75f;
         isFliped = !isFliped;
         for (flipValue = (isFliped ? 0 : 1); (isFliped ? flipValue <= 1.5f : flipValue >= 0);)
         {
@@ -105,7 +114,10 @@ public class GameManager : MonoBehaviour
             flipValue = 0;
         }
         ScreenShader.SetFloat("_Fliped", flipValue);
-        Map.gameObject.SetActive(!isFliped);
+        if (Map)
+        {
+            Map.gameObject.SetActive(!isFliped);
+        }
         Time.timeScale = 1f;
     }
     public void SetGameOver(bool success)
@@ -172,5 +184,15 @@ public class GameManager : MonoBehaviour
     public void Retry()
     {
         SceneManager.LoadScene(0);
+    }
+
+    public TextScriptPrinter textScriptPrinter;
+
+    public void NextText()
+    {
+        if (textScriptPrinter)
+        {
+            textScriptPrinter.NextText();
+        }
     }
 }

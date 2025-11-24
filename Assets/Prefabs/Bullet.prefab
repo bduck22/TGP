@@ -81,6 +81,7 @@ MonoBehaviour:
   owner: {fileID: 0}
   ParringEffect: {fileID: 4185224505737944392, guid: 333462e1dbb458a4e9f7fabdf093a513, type: 3}
   WalledEffect: {fileID: 506819727910498005, guid: c3abb5a56d3311b4eb864479877285df, type: 3}
+  HitEffect: {fileID: 7960020842947576396, guid: fd3a830a6b88c00438dac2aa60b1a7b3, type: 3}
   kill: 0
 --- !u!82 &3684517135593397573
 AudioSource:

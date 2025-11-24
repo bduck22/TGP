@@ -17,7 +17,6 @@ public class Bullet : MonoBehaviour
     }
     void Start()
     {
-        
         Shoot();
     }
 
@@ -25,11 +24,15 @@ public class Bullet : MonoBehaviour
 
     public GameObject WalledEffect;
 
+    public GameObject HitEffect;
+
     void Update()
     {
         if (transform.position.y <= -15)
         {
-            Destroy(gameObject);
+            gameObject.SetActive(false);
+            transform.parent = null;
+            rigidbody2D.gravityScale = 1;
         }
         if (rigidbody2D&&rigidbody2D.gravityScale!=0)
         {
@@ -55,7 +58,9 @@ public class Bullet : MonoBehaviour
                 Instantiate(ParringEffect, transform.position, Quaternion.identity);
                 GameManager.Instance.source.clip = Breake;
                 GameManager.Instance.source.Play();
-                Destroy(gameObject);
+                gameObject.SetActive(false);
+                transform.parent = null;
+                rigidbody2D.gravityScale = 1;
             }
         }
         if (collision.transform.CompareTag("B"))
@@ -70,7 +75,9 @@ public class Bullet : MonoBehaviour
                     Instantiate(ParringEffect, transform.position, Quaternion.identity);
                     GameManager.Instance.source.clip = Breake;
                     GameManager.Instance.source.Play();
-                    Destroy(gameObject);
+                    gameObject.SetActive(false);
+                    transform.parent = null;
+                    rigidbody2D.gravityScale = 1;
                 }
             }
         }
@@ -80,14 +87,29 @@ public class Bullet : MonoBehaviour
             {
                 if(!collision.CompareTag("Pin"))
                 {
-                    if (collision.transform.CompareTag("Enemy")&&collision.attachedRigidbody.GetComponent<Boss>().stuned&&collision.attachedRigidbody.GetComponent<Boss>().start && !kill)
+                    if (collision.transform.CompareTag("Enemy"))
                     {
-                        source.clip = BossHit;
-                        source.Play();
-                        transform.parent = collision.transform;
-                        rigidbody2D.bodyType = RigidbodyType2D.Kinematic;
+                        if (collision.attachedRigidbody.GetComponent<Boss>())
+                        {
+                            if (collision.attachedRigidbody.GetComponent<Boss>().stuned && collision.attachedRigidbody.GetComponent<Boss>().start && !kill)
+                            {
+                                source.clip = BossHit;
+                                source.Play();
+                                transform.parent = collision.transform;
+                                rigidbody2D.bodyType = RigidbodyType2D.Kinematic;
+                            }
+                        }
+                        else if(collision.attachedRigidbody.GetComponent<Monster>())
+                        {
+                            if (!kill)
+                            {
+                                collision.attachedRigidbody.gameObject.SetActive(false);
+                                gameObject.SetActive(false);
+                                Instantiate(HitEffect, collision.transform.position, Quaternion.identity);
+                            }
+                        }
                     }
-                    else if (!collision.transform.CompareTag("Enemy")&&!collision.CompareTag("Pin"))
+                    else if (!collision.CompareTag("Pin"))
                     {
                         source.clip = Plugin;
                         source.Play();

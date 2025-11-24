@@ -21,6 +21,8 @@ public class CameraSet : MonoBehaviour
 
     public Vector2 NotMi;
     public Vector2 NotPl;
+    public bool NotX;
+    public bool NotY;
     void Start()
     {
         Volume = GetComponent<Volume>();
@@ -29,11 +31,11 @@ public class CameraSet : MonoBehaviour
     }
     void Update()
     {
-        if (Follow && Target)
+        if (Follow && Target&&Target.gameObject.activeSelf)
         {
             float x = transform.position.x;
             float y = Target.position.y - 2f;
-            if (transform.position.x > NotMi.x && transform.position.x < NotPl.x)
+            if ((transform.position.x > NotMi.x && transform.position.x < NotPl.x) ||NotX)
             {
                 x = Target.position.x;
             }
@@ -45,15 +47,15 @@ public class CameraSet : MonoBehaviour
 
             transform.position = Vector3.Lerp(transform.position, new Vector3(x, y, transform.position.z), Speed * Time.deltaTime);
 
-            if (transform.position.x < NotMi.x)
+            if (transform.position.x < NotMi.x&&!NotX)
             {
                 transform.position = new Vector3(NotMi.x, transform.position.y, transform.position.z);
             }
-            if (transform.position.x > NotPl.x)
+            if (transform.position.x > NotPl.x && !NotX)
             {
                 transform.position = new Vector3(NotPl.x, transform.position.y, transform.position.z);
             }
-            if (transform.position.y > NotPl.y)
+            if (transform.position.y > NotPl.y && !NotY)
             {
                 transform.position = new Vector3(transform.position.x, NotPl.y, transform.position.z);
             }

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 9858613761ce8d04b86c75b1eee21aa3
+AssetOrigin:
+  serializedVersion: 1
+  productId: 327883
+  packageName: Cutscene Engine
+  packageVersion: 1.2
+  assetPath: Assets/Cutscene Engine/Editor/Physics/AnimationCurveOptimizer.cs
+  uploadId: 816540

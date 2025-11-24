@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -12,6 +13,7 @@ public class PlayerController : MonoBehaviour
     public int bulletCount;
 
     [SerializeField] private Bullet Bullet;
+    [SerializeField] private Gig Gig;
     [SerializeField] SpriteRenderer Renderer;
     [SerializeField] private Sprite BoxSprite;
     [SerializeField] private Sprite CircleSprite;
@@ -24,15 +26,34 @@ public class PlayerController : MonoBehaviour
     public float cool;
     public Vector2 MouseP;
     public bool dashing;
+
+    public float Chargetime;
+
+    public AudioSource Charging;
+    public ParticleSystem ChargeEffect;
+
+    public List<Transform> Bullets;
+
     void Start()
     {
         rigidbody2D = GetComponent<Rigidbody2D>();
+        Bullets = new List<Transform>();
+        for(int i = 0; i < 10; i++)
+        {
+            GameObject Bullet = Instantiate(this.Bullet, transform.position, transform.rotation).gameObject;
+            Bullet.gameObject.SetActive(false);
+            Bullets.Add(Bullet.transform);
+        }
     }
 
     public bool stone;
+
+    public bool Isgig;
+    public float gigtime;
+
+    public bool season1;
     void Update()
     {
-
         if (stone)
         {
             if (!Cursor.visible)
@@ -72,8 +93,30 @@ public class PlayerController : MonoBehaviour
         {
             bulletCount--;
             BulletLoad();
-            Instantiate(Bullet, transform.position, transform.rotation).owner = transform;
+            SpawnBullet();
+            Isgig = true;
         }
+
+        if (Isgig)
+        {
+            if (gigtime < 1f) {
+                gigtime += Time.deltaTime;
+            }
+        }
+        
+        if (Input.GetMouseButtonUp(0)&&!season1)
+        {
+            Isgig = false;
+            if (bulletCount > 3&&gigtime >1f)
+            {
+                Gig.gameObject.SetActive(true);
+                Gig.transform.position = transform.position;
+                Gig.transform.rotation = transform.rotation;
+                Gig.Shoot();
+            }
+            gigtime = 0;
+        }
+
 
         if (Input.GetKeyDown(KeyCode.Space) && jumpCount > 0)
         {
@@ -115,6 +158,41 @@ public class PlayerController : MonoBehaviour
             {
                 rigidbody2D.linearVelocityX = 0;
             }
+
+            if (!season1)
+            {
+                if (rigidbody2D.linearVelocity == Vector2.zero && (bulletCount < 10))
+                {
+                    if (Input.GetKey(KeyCode.S))
+                    {
+                        if (!ChargeEffect.isPlaying)
+                        {
+                            ChargeEffect.Play();
+                            ChargeEffect.GetComponent<AudioSource>().Play();
+                        }
+                        if (Chargetime > 1f)
+                        {
+                            Charging.Play();
+                            bulletCount++;
+                            Chargetime = 0;
+                            BulletLoad();
+                        }
+                        else Chargetime += Time.deltaTime;
+                    }
+                    else
+                    {
+                        ChargeEffect.GetComponent<AudioSource>().Stop();
+                        ChargeEffect.Stop();
+                        Chargetime = 0;
+                    }
+                }
+                else
+                {
+                    ChargeEffect.GetComponent<AudioSource>().Stop();
+                    ChargeEffect.Stop();
+                    Chargetime = 0;
+                }
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && dashtime >= dashcool)
@@ -125,6 +203,31 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             GameManager.Instance.Flip();
+        }
+    }
+
+    public void SpawnBullet()
+    {
+        GameObject Bullet=null;
+        foreach(Transform b in Bullets)
+        {
+            if (!b.gameObject.activeSelf)
+            {
+                Bullet = b.gameObject;
+            }
+        }
+        if (!Bullet)
+        {
+            Bullet = Instantiate(this.Bullet, transform.position, transform.rotation).gameObject;
+            Bullet.GetComponent<Bullet>().owner = transform;
+        }
+        else
+        {
+            Bullet.transform.position = transform.position;
+            Bullet.transform.rotation = transform.rotation;
+            Bullet.GetComponent<Bullet>().owner = transform;
+            Bullet.gameObject.SetActive(true);
+            Bullet.GetComponent<Bullet>().Shoot();
         }
     }
 
@@ -145,9 +248,6 @@ public class PlayerController : MonoBehaviour
 
     public IEnumerator parring()
     {
-        DashEffect.gameObject.SetActive(false);
-        DashEffect.gameObject.SetActive(true);
-        DashEffect.loop = true;
         time = 0;
         Invin = 0.5f;
         Parring = true;
@@ -157,7 +257,6 @@ public class PlayerController : MonoBehaviour
         Parring = false;
         Renderer.sprite = CircleSprite;
         Renderer.color = Color.black;
-        DashEffect.loop = false;
     }
 
     IEnumerator dash()
@@ -185,19 +284,33 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.transform.CompareTag("Enemy"))
         {
-            if (Invin<=0)
+            if (Invin <= 0)
             {
-                Instantiate(GameManager.Instance.DeathEffect, transform.position, Quaternion.Euler(0, 0, Quaternion.FromToRotation(Vector2.right, collision.rigidbody.position - (Vector2)transform.position).eulerAngles.z));
-                Death();
-                Destroy(rigidbody2D);
-                GameManager.Instance.Gameover(0.1f);
-                Destroy(Renderer.gameObject, 0.5f);
+                if (bulletCount >= 7&&!season1)
+                {
+                    bulletCount -= 7;
+                    BulletLoad();
+                    Instantiate(GameManager.Instance.ParringEffect, collision.rigidbody.position, Quaternion.identity);
+                    Destroy(collision.rigidbody.gameObject);
+                }
+                else
+                {
+                    Instantiate(GameManager.Instance.DeathEffect, transform.position, Quaternion.Euler(0, 0, Quaternion.FromToRotation(Vector2.right, collision.rigidbody.position - (Vector2)transform.position).eulerAngles.z));
+                    Death();
+                    Destroy(rigidbody2D);
+                    GameManager.Instance.Gameover(0.1f);
+                    Destroy(Renderer.gameObject, 0.5f);
+                }
+
             }
             else if (Parring)
             {
-                collision.rigidbody.GetComponent<Boss>().Stun(1f);
-                collision.rigidbody.linearVelocity = Vector2.zero;
-                collision.rigidbody.AddForce(((Vector2)transform.position - collision.rigidbody.position).normalized * Random.Range(3f, 10f) * -1, ForceMode2D.Impulse);
+                if (collision.rigidbody.GetComponent<Boss>())
+                {
+                    collision.rigidbody.GetComponent<Boss>().Stun(1f);
+                    collision.rigidbody.linearVelocity = Vector2.zero;
+                    collision.rigidbody.AddForce(((Vector2)transform.position - collision.rigidbody.position).normalized * Random.Range(3f, 10f) * -1, ForceMode2D.Impulse);
+                }
             }
         }
     }
@@ -219,11 +332,11 @@ public class PlayerController : MonoBehaviour
         {
             return;
         }
-        if (collision.contacts[0].normal.y >= 0.7f && !isGround && collision.transform.CompareTag("Ground"))
+        if (collision.contacts[0].normal.y >= 0.7f && !isGround && collision.transform.CompareTag("Ground") && rigidbody2D.linearVelocityY == 0)
         {
             jumpCount = 2;
             isGround = true;
-            Destroy(Instantiate(GameManager.Instance.StepEffect, collision.contacts[0].point, Quaternion.identity), 1);
+            Destroy(Instantiate(GameManager.Instance.ThumpEffect, collision.contacts[0].point, Quaternion.identity), 1);
         }
 
         if (collision.contacts[0].normal.x == -1)
@@ -269,13 +382,23 @@ public class PlayerController : MonoBehaviour
         }
         if (collision.transform.CompareTag("Enemy"))
         {
-            if (Invin<=0)
+            if (Invin <= 0)
             {
-                Instantiate(GameManager.Instance.DeathEffect, transform.position, Quaternion.Euler(0, 0, Quaternion.FromToRotation(Vector2.right, collision.attachedRigidbody.position - (Vector2)transform.position).eulerAngles.z));
-                Death();
-                Destroy(rigidbody2D);
-                GameManager.Instance.Gameover(0.1f);
-                Destroy(Renderer.gameObject, 0.5f);
+                if (bulletCount >= 7)
+                {
+                    bulletCount -= 7;
+                    BulletLoad();
+                    Instantiate(GameManager.Instance.ParringEffect, collision.attachedRigidbody.position, Quaternion.identity);
+                    Destroy(collision.attachedRigidbody.gameObject);
+                }
+                else
+                {
+                    Instantiate(GameManager.Instance.DeathEffect, transform.position, Quaternion.Euler(0, 0, Quaternion.FromToRotation(Vector2.right, collision.attachedRigidbody.position - (Vector2)transform.position).eulerAngles.z));
+                    Death();
+                    Destroy(rigidbody2D);
+                    GameManager.Instance.Gameover(0.1f);
+                    Destroy(Renderer.gameObject, 0.5f);
+                }
             }
         }
         if (collision.CompareTag("B"))
@@ -286,12 +409,14 @@ public class PlayerController : MonoBehaviour
                 {
                     bulletCount++;
                     BulletLoad();
-                    Destroy(collision.transform.parent.gameObject);
+                    collision.transform.parent.gameObject.SetActive(false);
+                    collision.transform.parent.parent = null;
+                    collision.attachedRigidbody.gravityScale = 1;
                 }
             }
             else if (collision.attachedRigidbody.GetComponentInChildren<Bullet>().owner != transform)
             {
-                if (Invin >0)
+                if (Invin > 0)
                 {
                     if (Parring)
                     {
@@ -299,29 +424,31 @@ public class PlayerController : MonoBehaviour
                         collision.attachedRigidbody.linearVelocity = Vector2.zero;
                         collision.attachedRigidbody.GetComponent<Bullet>().owner = transform;
                         collision.attachedRigidbody.AddForce(((Vector2)transform.position - collision.attachedRigidbody.position).normalized * Random.Range(10f, 25f) * -1, ForceMode2D.Impulse);
-                        //collision.
                     }
+                }
+                else if(bulletCount<7)
+                {
+                    Destroy(rigidbody2D);
+                    Death();
+                    transform.eulerAngles = new Vector3(0, -90, 0);
+                    transform.parent = collision.transform.parent;
+                    collision.attachedRigidbody.GetComponent<Bullet>().kill = true;
+                    //}
                 }
                 else
                 {
-                    //if (collision.attachedRigidbody.GetComponent<Bullet>().Blade)
-                    //{
-                    //    
-                    //}
-                    //else
-                    //{
-                        Destroy(rigidbody2D);
-                        Death();
-                        transform.eulerAngles = new Vector3(0, -90, 0);
-                        transform.parent = collision.transform.parent;
-                        collision.attachedRigidbody.GetComponent<Bullet>().kill = true;
-                    //}
+                    bulletCount -= 7;
+                    BulletLoad();
+                    Instantiate(GameManager.Instance.ParringEffect, collision.attachedRigidbody.position, Quaternion.identity);
+                    collision.attachedRigidbody.gameObject.SetActive(false);
+                    collision.transform.parent = null;
+                    collision.attachedRigidbody.gravityScale = 1;
                 }
             }
         }
         if (collision.CompareTag("Blade"))
         {
-            if (Invin<=0)
+            if (Invin <= 0)
             {
                 Instantiate(GameManager.Instance.DeathEffect, transform.position, Quaternion.Euler(0, 0, Quaternion.FromToRotation(Vector2.right, collision.attachedRigidbody.position - (Vector2)transform.position).eulerAngles.z));
                 Death();

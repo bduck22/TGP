@@ -536,8 +536,7 @@ public class Boss : MonoBehaviour
                         Stun(0.6f);
                         if (status == Boss_Status.White)
                         {
-                            Destroy(collision.attachedRigidbody.GetComponent<Collider2D>());
-                            Destroy(collision.attachedRigidbody.gameObject);
+                            collision.attachedRigidbody.gameObject.SetActive(false);
                             Destroy(Instantiate(ParringOb, collision.attachedRigidbody.position, Quaternion.Euler(0, 0, Random.Range(1f, 180f))), 3);
                         }
                         else

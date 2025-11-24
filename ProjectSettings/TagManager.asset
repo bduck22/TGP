@@ -11,6 +11,7 @@ TagManager:
   - B
   - Enemy
   - Blade
+  - G
   layers:
   - Default
   - TransparentFX
